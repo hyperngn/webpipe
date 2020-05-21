@@ -94,9 +94,7 @@ defmodule Webpipe do
 
     defp push_data(_id, ""), do: :noop
     defp push_data(id, data) do
-      IO.puts "pushing data for id: #{id}, data: #{inspect data}"
       :ets.lookup(:sessions, id)
-      |> IO.inspect(label: "SESSIONS")
       |> Enum.each(fn {_id, listener} ->
         send(listener, {:data, data})
       end)
@@ -109,7 +107,7 @@ defmodule Webpipe do
         "content-type" => "text/event-stream",
       }, req)
 
-      :erlang.send_after(5000, self(), :tick)
+      # :erlang.send_after(5000, self(), :tick)
 
       {:cowboy_loop, req, []}
     end

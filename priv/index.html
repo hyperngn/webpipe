@@ -15,8 +15,13 @@
       <p>
       Just use the following code to start piping data to your own private URL!
       </p>
-      <pre><code>tail -f access.log | curl --upload-file - http://localhost:8080/session/f75f7b46-21b4-4484-b842-3c62ed73fdd2
+      <pre><code>tail -f access.log | curl --upload-file - https://6a625a69.ngrok.io/session/toronto-elixir-is-awesome-62ed73fdd2
 </code></pre>
+or to send a message use:
+      <pre><code>echo "Danny says Hi!" | curl --upload-file - https://6a625a69.ngrok.io/session/toronto-elixir-is-awesome-62ed73fdd2
+</code></pre>
+to view the incoming messages in the browser go to:
+<a href="https://6a625a69.ngrok.io/session/toronto-elixir-is-awesome-62ed73fdd2">https://6a625a69.ngrok.io/session/toronto-elixir-is-awesome-62ed73fdd2</a>
     </section>
   </body>
 </html>
