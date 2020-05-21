@@ -12,13 +12,21 @@
       WebPipe | Pipe your files to the web!
     </header>
     <section>
-      <pre id=out></pre>
+      <table id=out>
+      </table>
     </section>
 
     <script charset="utf-8">
       const out = document.querySelector('#out')
       const es = new EventSource("/session-sse/<%= session_id %>")
-      es.onmessage = (e) => console.log(">>", e)
+      es.onmessage = (e) => {
+      document.createElement("p")
+        const tr = document.createElement("tr")
+        const td = document.createElement("td")
+        td.innerHTML = e.data
+        tr.appendChild(td)
+        out.prepend(tr)
+      }
     </script>
   </body>
 </html>

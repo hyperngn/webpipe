@@ -3,7 +3,7 @@ defmodule Webpipe do
     import Logger, only: [info: 1]
 
     def init(req, _opts) do
-      info [req.method, " ", req.path]
+      info [req.method, " ", req.path, "PID", inspect(self())]
 
       case {req.method, req.path} do
         {"GET", "/"} ->
@@ -32,6 +32,7 @@ defmodule Webpipe do
       {:ok, resp, []}
     end
 
+    # TODO: this is inefficient fix it
     defp render_page(name, bindings \\ []) do
       index_html =
         :code.priv_dir(:webpipe)
@@ -65,12 +66,50 @@ defmodule Webpipe do
       {:ok, resp, []}
     end
 
+    def session_handler(_, id, req) do
+      {:ok, req} = read_body_loop(id, req)
+
+      resp =
+        :cowboy_req.reply(
+          200,
+          %{"content-type" => "text/plain; charset=utf-8"},
+          "OK",
+          req
+        )
+
+      {:ok, resp, []}
+    end
+
+    def read_body_loop(id, req) do
+      case :cowboy_req.read_body(req, %{period: 100}) do
+        {:more, data, req} ->
+          push_data(id, data)
+          read_body_loop(id, req)
+
+        {:ok, data, req} ->
+          push_data(id, data)
+          {:ok, req}
+      end
+    end
+
+    defp push_data(_id, ""), do: :noop
+    defp push_data(id, data) do
+      IO.puts "pushing data for id: #{id}, data: #{inspect data}"
+      :ets.lookup(:sessions, id)
+      |> IO.inspect(label: "SESSIONS")
+      |> Enum.each(fn {_id, listener} ->
+        send(listener, {:data, data})
+      end)
+    end
+
     def session_eventsource_handler(id, req) do
+      :ets.insert(:sessions, {id, self()})
+
       req = :cowboy_req.stream_reply(200, %{
         "content-type" => "text/event-stream",
       }, req)
 
-      :erlang.send_after(1000, self(), :tick)
+      :erlang.send_after(5000, self(), :tick)
 
       {:cowboy_loop, req, []}
     end
@@ -86,35 +125,24 @@ defmodule Webpipe do
       {:ok, req, state}
     end
 
+    def info({:data, data}, req, state) do
+      :cowboy_req.stream_events(%{
+        id: id(),
+        data: data,
+      }, :nofin, req)
+
+      {:ok, req, state}
+    end
+
+    def info(msg, req, state) do
+      Logger.warn "UNKNOWN MSG #{inspect msg}"
+      {:ok, req, state}
+    end
+
+    # TODO: handle terminate
+
     def id, do: :erlang.unique_integer([:positive, :monotonic]) |> to_string
 
-    def session_handler(_, id, req) do
-       #info("#init req: #{inspect(req)} opts: #{inspect(opts)}")
-       #{:ok, req} = read_body(req)
-
-       #resp =
-       #:cowboy_req.reply(200, %{"content-type" => "text/plain; charset=utf-8"}, "Hello!", req)
-
-       #info "resp: #{ inspect(resp) }"
-
-       #{:ok, resp, opts}
-    end
-
-
-    def read_body(req) do
-      IO.puts(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-      case :cowboy_req.read_body(req, %{period: 100}) do
-        {:more, data, req} ->
-          IO.inspect(data, label: ">>")
-          read_body(req)
-
-        {:ok, data, req} ->
-          IO.inspect(data, label: ">>")
-          IO.puts(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-          {:ok, req}
-      end
-    end
   end
 
   defmodule Router do
@@ -130,6 +158,7 @@ defmodule Webpipe do
 
   defmodule Server do
     def start do
+      :ets.new(:sessions, [:named_table, :public])
       :cowboy.start_clear(:http, [port: 8080], %{env: %{dispatch: Router.routes()}})
     end
 

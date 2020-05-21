@@ -22,7 +22,8 @@ defmodule Webpipe.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      cowboy: "~> 2.7.0"
+      cowboy: "~> 2.7.0",
+      jason: "> 0.0.0"
     ]
   end
 end
