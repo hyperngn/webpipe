@@ -23,7 +23,7 @@
       document.createElement("p")
         const tr = document.createElement("tr")
         const td = document.createElement("td")
-        td.innerHTML = e.data
+        td.innerHTML = JSON.parse(e.data).line
         tr.appendChild(td)
         out.prepend(tr)
       }

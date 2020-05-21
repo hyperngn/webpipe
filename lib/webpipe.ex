@@ -107,34 +107,33 @@ defmodule Webpipe do
         "content-type" => "text/event-stream",
       }, req)
 
-      # :erlang.send_after(5000, self(), :tick)
+      :erlang.send_after(10, self(), :tick)
 
       {:cowboy_loop, req, []}
     end
 
     def info(:tick, req, state) do
-      :cowboy_req.stream_events(%{
-        id: id(),
-        data: "This is amazing"
-      }, :nofin, req)
+      # :erlang.send_after(1000, self(), :tick)
 
-      :erlang.send_after(1000, self(), :tick)
-
+      emit_event("Pipe check", req)
       {:ok, req, state}
     end
 
     def info({:data, data}, req, state) do
-      :cowboy_req.stream_events(%{
-        id: id(),
-        data: data,
-      }, :nofin, req)
-
+      emit_event(data, req)
       {:ok, req, state}
     end
 
     def info(msg, req, state) do
       Logger.warn "UNKNOWN MSG #{inspect msg}"
       {:ok, req, state}
+    end
+
+    defp emit_event(data, req) do
+      :cowboy_req.stream_events(%{
+        id: id(),
+        data: Jason.encode!(%{line: data}),
+      }, :nofin, req)
     end
 
     # TODO: handle terminate
