@@ -3,7 +3,7 @@ defmodule Webpipe do
     import Logger, only: [info: 1]
 
     def init(req, _opts) do
-      info [req.method, " ", req.path, " PID:", inspect(self())]
+      info([req.method, " ", req.path, " PID:", inspect(self())])
 
       case {req.method, req.path} do
         {"GET", "/"} ->
@@ -45,7 +45,7 @@ defmodule Webpipe do
         :cowboy_req.reply(
           404,
           %{"content-type" => "text/html; charset=utf-8"},
-          "<!doctype html> <h1>404</h1> Resource `#{ path }` not found!",
+          "<!doctype html> <h1>404</h1> Resource `#{path}` not found!",
           req
         )
 
@@ -91,8 +91,10 @@ defmodule Webpipe do
     end
 
     defp push_data(_id, ""), do: :noop
+
     defp push_data(id, data) do
-      :ets.lookup(:sessions, id) # => []
+      # => []
+      :ets.lookup(:sessions, id)
       |> Enum.each(fn {_id, listener} ->
         send(listener, {:data, data})
       end)
@@ -101,9 +103,14 @@ defmodule Webpipe do
     def session_eventsource_handler(id, req) do
       :ets.insert(:sessions, {id, self()})
 
-      req = :cowboy_req.stream_reply(200, %{
-        "content-type" => "text/event-stream",
-      }, req)
+      req =
+        :cowboy_req.stream_reply(
+          200,
+          %{
+            "content-type" => "text/event-stream"
+          },
+          req
+        )
 
       :erlang.send_after(10, self(), :tick)
 
@@ -123,21 +130,24 @@ defmodule Webpipe do
     end
 
     def info(msg, req, state) do
-      Logger.warn "UNKNOWN MSG #{inspect msg}"
+      Logger.warn("UNKNOWN MSG #{inspect(msg)}")
       {:ok, req, state}
     end
 
     defp emit_event(data, req) do
-      :cowboy_req.stream_events(%{
-        id: id(),
-        data: Jason.encode!(%{line: data}),
-      }, :nofin, req)
+      :cowboy_req.stream_events(
+        %{
+          id: id(),
+          data: Jason.encode!(%{line: data})
+        },
+        :nofin,
+        req
+      )
     end
 
     # TODO: handle terminate
 
     def id, do: :erlang.unique_integer([:positive, :monotonic]) |> to_string
-
   end
 
   defmodule Router do
@@ -145,7 +155,7 @@ defmodule Webpipe do
       :cowboy_router.compile([
         {:_,
          [
-           {:_, HTTPHandler, []},
+           {:_, HTTPHandler, []}
          ]}
       ])
     end
