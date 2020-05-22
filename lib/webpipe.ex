@@ -3,7 +3,7 @@ defmodule Webpipe do
     import Logger, only: [info: 1]
 
     def init(req, _opts) do
-      info [req.method, " ", req.path, "PID", inspect(self())]
+      info [req.method, " ", req.path, " PID:", inspect(self())]
 
       case {req.method, req.path} do
         {"GET", "/"} ->
@@ -20,12 +20,12 @@ defmodule Webpipe do
       end
     end
 
-    def not_found(_method, path, req) do
+    def index_page(req) do
       resp =
         :cowboy_req.reply(
-          404,
+          200,
           %{"content-type" => "text/html; charset=utf-8"},
-          "<!doctype html> <h1>404</h1> Resource `#{ path }` not found!",
+          render_page("index.html"),
           req
         )
 
@@ -34,20 +34,18 @@ defmodule Webpipe do
 
     # TODO: this is inefficient fix it
     defp render_page(name, bindings \\ []) do
-      index_html =
-        :code.priv_dir(:webpipe)
-        |> Path.join(name)
-        |> File.read!()
-        |> EEx.eval_string(bindings)
-
+      :code.priv_dir(:webpipe)
+      |> Path.join(name)
+      |> File.read!()
+      |> EEx.eval_string(bindings)
     end
 
-    def index_page(req) do
+    def not_found(_method, path, req) do
       resp =
         :cowboy_req.reply(
-          200,
+          404,
           %{"content-type" => "text/html; charset=utf-8"},
-          render_page("index.html"),
+          "<!doctype html> <h1>404</h1> Resource `#{ path }` not found!",
           req
         )
 
@@ -94,7 +92,7 @@ defmodule Webpipe do
 
     defp push_data(_id, ""), do: :noop
     defp push_data(id, data) do
-      :ets.lookup(:sessions, id)
+      :ets.lookup(:sessions, id) # => []
       |> Enum.each(fn {_id, listener} ->
         send(listener, {:data, data})
       end)
@@ -155,7 +153,8 @@ defmodule Webpipe do
 
   defmodule Server do
     def start do
-      :ets.new(:sessions, [:named_table, :public])
+      # {"foo" => [#<PID1>, #<PID2>], "bar"....}
+      :ets.new(:sessions, [:named_table, :public, :bag])
       :cowboy.start_clear(:http, [port: 8080], %{env: %{dispatch: Router.routes()}})
     end
 

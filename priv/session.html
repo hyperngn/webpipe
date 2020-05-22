@@ -20,7 +20,6 @@
       const out = document.querySelector('#out')
       const es = new EventSource("/session-sse/<%= session_id %>")
       es.onmessage = (e) => {
-      document.createElement("p")
         const tr = document.createElement("tr")
         const td = document.createElement("td")
         td.innerHTML = JSON.parse(e.data).line

@@ -23,7 +23,8 @@ defmodule Webpipe.MixProject do
   defp deps do
     [
       cowboy: "~> 2.7.0",
-      jason: "> 0.0.0"
+      jason: "> 0.0.0",
+logger_file_backend:  "> 0.0.0"
     ]
   end
 end
