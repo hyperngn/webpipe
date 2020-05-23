@@ -1,0 +1,10 @@
+.dockerignore
+.log
+tmp
+docker
+_build
+deps
+*.ez
+releases
+erl_crash.dump
+node_modules
