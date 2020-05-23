@@ -2,6 +2,8 @@ defmodule Webpipe do
   defmodule HTTPHandler do
     import Logger, only: [info: 1]
 
+    alias Webpipe.SessionStore
+
     def init(req, _opts) do
       info([req.method, " ", req.path, " PID:", inspect(self())])
 
@@ -94,14 +96,15 @@ defmodule Webpipe do
 
     defp push_data(id, data) do
       # => []
-      :ets.lookup(:sessions, id)
-      |> Enum.each(fn {_id, listener} ->
+      id
+      |> SessionStore.get_listeners()
+      |> Enum.each(fn listener ->
         send(listener, {:data, data})
       end)
     end
 
     def session_eventsource_handler(id, req) do
-      :ets.insert(:sessions, {id, self()})
+      SessionStore.register_listener(id)
 
       req =
         :cowboy_req.stream_reply(
@@ -162,14 +165,48 @@ defmodule Webpipe do
   end
 
   defmodule Server do
-    def start do
-      # {"foo" => [#<PID1>, #<PID2>], "bar"....}
-      :ets.new(:sessions, [:named_table, :public, :bag])
-      :cowboy.start_clear(:http, [port: 8080], %{env: %{dispatch: Router.routes()}})
+    use GenServer
+    require Logger
+
+    def start_link(opts) do
+      GenServer.start_link(__MODULE__, opts)
     end
 
-    def stop do
+    @impl GenServer
+    def init(opts) do
+      port = opts[:port] || 8080
+      Logger.info("Starting HTTP Server at http://localhost:#{port}/")
+      :cowboy.start_clear(:http, [port: port], %{env: %{dispatch: Router.routes()}})
+      {:ok, :state}
+    end
+
+    @impl GenServer
+    def terminate(_reason, _state) do
       :cowboy.stop_listener(:http)
+    end
+  end
+
+  defmodule SessionStore do
+    use GenServer
+
+    def start_link(_opts) do
+      GenServer.start_link(__MODULE__, :state)
+    end
+
+    @impl GenServer
+    def init(_opts) do
+      # {"foo" => [#<PID1>, #<PID2>], "bar"....}
+      :ets.new(:sessions, [:named_table, :public, :bag])
+      {:ok, :state}
+    end
+
+    def get_listeners(session_id) do
+      :ets.lookup(:sessions, session_id)
+      |> Enum.map(fn {_id, pid} -> pid end)
+    end
+
+    def register_listener(session_id) do
+      :ets.insert(:sessions, {session_id, self()})
     end
   end
 end
