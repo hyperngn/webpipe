@@ -1,0 +1,27 @@
+<svg version="1.1"
+     baseProfile="full"
+     width="200" height="200"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <path d="M 20,20
+          l 50, 50
+          l -50, 50
+          "
+          stroke-width="10px"
+          stroke="red"
+          fill="none"
+          />
+
+  <path d="M 85 16
+          v 108
+          "
+          stroke-width="10px"
+          stroke="red" />
+
+  <path d="M 0,124
+          h 200
+          "
+          stroke="green"
+          />
+
+</svg>
