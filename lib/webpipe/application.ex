@@ -10,7 +10,7 @@ defmodule Webpipe.Application do
       # Starts a worker by calling: Webpipe.Worker.start_link(arg)
       # {Webpipe.Worker, arg}
       Webpipe.SessionStore,
-      {Webpipe.Server, %{port: 4020}}
+      {Webpipe.Server, %{port: 8000}}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

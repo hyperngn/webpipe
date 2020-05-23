@@ -27,19 +27,19 @@ defmodule Webpipe do
         :cowboy_req.reply(
           200,
           %{"content-type" => "text/html; charset=utf-8"},
-          render_page("index.html"),
+          index_html(%{}),
           req
         )
 
       {:ok, resp, []}
     end
 
-    # TODO: this is inefficient fix it
-    defp render_page(name, bindings \\ []) do
-      :code.priv_dir(:webpipe)
-      |> Path.join(name)
-      |> File.read!()
-      |> EEx.eval_string(bindings)
+    require EEx
+    @templates :code.priv_dir(:webpipe) |> Path.join("*.html") |> Path.wildcard()
+
+    for template <- @templates do
+      fn_name = template |> Path.basename() |> String.replace(".", "_") |> String.to_atom()
+      EEx.function_from_file(:defp, fn_name, template, [:data])
     end
 
     def not_found(_method, path, req) do
@@ -59,7 +59,7 @@ defmodule Webpipe do
         :cowboy_req.reply(
           200,
           %{"content-type" => "text/html; charset=utf-8"},
-          render_page("session.html", session_id: id),
+          session_html(%{session_id: id}),
           req
         )
 
