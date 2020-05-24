@@ -144,15 +144,22 @@ defmodule Webpipe do
           req
         )
 
-      :erlang.send_after(10, self(), :tick)
+      :erlang.send_after(10, self(), :pipe_check)
+      send(self(), :heartbeat)
 
       {:cowboy_loop, req, []}
     end
 
-    def info(:tick, req, state) do
-      # :erlang.send_after(1000, self(), :tick)
-
+    def info(:pipe_check, req, state) do
       emit_event("Pipe check", req)
+      {:ok, req, state}
+    end
+
+    # 1 second
+    @heartbeat_interval 1000
+    def info(:heartbeat, req, state) do
+      emit_event("", req)
+      :erlang.send_after(@heartbeat_interval, self(), :heartbeat)
       {:ok, req, state}
     end
 
@@ -169,7 +176,6 @@ defmodule Webpipe do
     defp emit_event(data, req) do
       :cowboy_req.stream_events(
         %{
-          id: id(),
           data: Jason.encode!(%{line: data})
         },
         :nofin,
@@ -178,8 +184,6 @@ defmodule Webpipe do
     end
 
     # TODO: handle terminate
-
-    def id, do: :erlang.unique_integer([:positive, :monotonic]) |> to_string
   end
 
   defmodule Router do
@@ -201,11 +205,19 @@ defmodule Webpipe do
       GenServer.start_link(__MODULE__, opts)
     end
 
+    @hour 60 * 60 * 1000
     @impl GenServer
     def init(opts) do
       port = opts[:port] || 8080
       Logger.info("Starting HTTP Server at http://localhost:#{port}/")
-      :cowboy.start_clear(:http, [port: port], %{env: %{dispatch: Router.routes()}})
+
+      :cowboy.start_clear(:http, [port: port], %{
+        env: %{dispatch: Router.routes()},
+        idle_timeout: @hour,
+        inactivity_timeout: @hour,
+        request_timeout: @hour
+      })
+
       {:ok, :state}
     end
 

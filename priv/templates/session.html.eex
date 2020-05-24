@@ -3,31 +3,128 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebPipe | Pipe your files to the web!</title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+    <title> WebPipe#<%= String.slice(@session_id, 0, 8) %> | Pipe from your servers to the browser!</title>
+
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.min.css">
+    <style type="text/css" media="screen">
+.title{
+  display: inline;
+  font-size: 1.6rem;
+  line-height: 5.2rem;
+  padding: 0;
+  text-decoration: none;
+}
+.webpipe-logo{
+  height: 2rem;
+  position: relative;
+  top: .3rem;
+  stroke: #9b4dca;
+}
+.nav-title{
+  display: inline;
+  font-size: 1.6rem;
+  line-height: 5.2rem;
+  padding: 0;
+  text-decoration: none;
+}
+header{
+  background-color: #f4f5f6;
+  margin-bottom: 20px;
+  border-bottom: solid 1px #9b4dca;
+}
+.tight-bottom{ margin-bottom: 5px; }
+footer {
+  background-color: #f4f5f6;
+  margin-top: 20px;
+  border-top: solid 1px #9b4dca;
+}
+footer .container{
+  padding: 20px;
+}
+.fluid-container{
+  padding: 10px;
+}
+</style>
   </head>
   <body>
     <header>
-      WebPipe | Pipe your files to the web!
+      <nav class=container>
+      <a href="/" class="nav-title">
+<svg class="webpipe-logo" version="1.1"
+      baseProfile="full"
+      height="50"
+      viewBox="0 0 110 140"
+      xmlns="http://www.w3.org/2000/svg">
+
+  <path d="M 40,20
+          l 50, 50
+          l -50, 50
+          "
+          stroke-width="10px"
+          fill="none"
+          />
+
+  <path d="M 20 16
+          v 108
+          "
+          stroke-width="10px"
+          fill="none"
+          />
+
+</svg>
+
+      <h1 class=title>WebPipe</h1>
+    </a>
+      </nav>
     </header>
-    <section>
-      <table id=out>
-      </table>
+    <section class="fluid-container">
+      <div class="controls">
+        <div class="float-right">
+          <input type="checkbox" id="pause-logs">
+          <label class="label-inline" for="pause-logs">Pause logs</label>
+        </div>
+      </div>
+      <hr />
+      <table id=out></table>
     </section>
 
     <script charset="utf-8">
+      const pauseLogsCheckbox = document.querySelector('#pause-logs')
+
       const out = document.querySelector('#out')
       const es = new EventSource("/session-sse/<%= @session_id %>")
+
+      const prependLines = (linesRaw) => {
+        const fragment = new DocumentFragment()
+
+        linesRaw
+        .split(/\r?\n/)
+        .forEach(line => {
+            if (line == "") {
+              return
+            }
+            const tr = document.createElement("tr")
+            const td = document.createElement("td")
+            td.innerText = line
+            tr.appendChild(td)
+            fragment.appendChild(tr)
+          })
+
+        out.prepend(fragment)
+      }
+
       es.onmessage = (e) => {
-        const tr = document.createElement("tr")
-        const td = document.createElement("td")
-        td.innerHTML = JSON.parse(e.data).line
-        tr.appendChild(td)
-        out.prepend(tr)
+        const line = JSON.parse(e.data).line
+
+        if(pauseLogsCheckbox.checked || line == "" ){
+          return
+        }
+
+        prependLines(line)
       }
     </script>
   </body>
 </html>
-
