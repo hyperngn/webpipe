@@ -88,6 +88,7 @@ footer .container{
         <%= @session_url %>
       </a>
       </p>
+      <img src="file:///home/minhajuddin/r/hyperngn/webpipe/priv/assets/webpipe-screenshot.png" />
     </section>
     <hr />
     <section class="container">

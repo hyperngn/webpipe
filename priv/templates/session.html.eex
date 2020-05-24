@@ -47,6 +47,9 @@ footer .container{
 .fluid-container{
   padding: 10px;
 }
+#out td {
+  overflow-wrap: anywhere;
+}
 </style>
   </head>
   <body>
