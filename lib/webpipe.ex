@@ -1,8 +1,24 @@
 defmodule Webpipe do
+  defmodule IDGenerator do
+    def generate() do
+      Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+    end
+  end
+
+  defmodule Templates do
+    require EEx
+    @templates :code.priv_dir(:webpipe) |> Path.join("templates/*.html.eex") |> Path.wildcard()
+
+    for template <- @templates do
+      fn_name = template |> Path.basename() |> String.to_atom()
+      EEx.function_from_file(:def, fn_name, template, [:assigns])
+    end
+  end
+
   defmodule HTTPHandler do
     import Logger, only: [info: 1]
 
-    alias Webpipe.SessionStore
+    alias Webpipe.{SessionStore, Templates}
 
     def init(req, _opts) do
       info([req.method, " ", req.path, " PID:", inspect(self())])
@@ -17,9 +33,24 @@ defmodule Webpipe do
         {method, "/session/" <> id} when method in ~w[GET PUT POST PATCH] ->
           session_handler(method, id, req)
 
+        {"GET", "/static/" <> asset} ->
+          static_handler(asset)
+
         {method, path} ->
           not_found(method, path, req)
       end
+    end
+
+    def static_handler(req) do
+      resp =
+        :cowboy_req.reply(
+          200,
+          %{"content-type" => "text/html; charset=utf-8"},
+          "",
+          req
+        )
+
+      {:ok, resp, []}
     end
 
     def index_page(req) do
@@ -27,19 +58,17 @@ defmodule Webpipe do
         :cowboy_req.reply(
           200,
           %{"content-type" => "text/html; charset=utf-8"},
-          index_html(%{}),
+          render_template(:"index.html.eex", %{
+            session_url: "https://webpipe.hyperngn.com/session/#{IDGenerator.generate()}"
+          }),
           req
         )
 
       {:ok, resp, []}
     end
 
-    require EEx
-    @templates :code.priv_dir(:webpipe) |> Path.join("*.html") |> Path.wildcard()
-
-    for template <- @templates do
-      fn_name = template |> Path.basename() |> String.replace(".", "_") |> String.to_atom()
-      EEx.function_from_file(:defp, fn_name, template, [:data])
+    def render_template(name, assigns) when is_atom(name) do
+      apply(Templates, name, [assigns])
     end
 
     def not_found(_method, path, req) do
@@ -59,7 +88,7 @@ defmodule Webpipe do
         :cowboy_req.reply(
           200,
           %{"content-type" => "text/html; charset=utf-8"},
-          session_html(%{session_id: id}),
+          render_template(:"session.html.eex", %{session_id: id}),
           req
         )
 

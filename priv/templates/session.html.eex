@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebPipe | Pipe your files to the web!</title>
+    <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
   </head>
@@ -18,7 +19,7 @@
 
     <script charset="utf-8">
       const out = document.querySelector('#out')
-      const es = new EventSource("/session-sse/<%= data.session_id %>")
+      const es = new EventSource("/session-sse/<%= @session_id %>")
       es.onmessage = (e) => {
         const tr = document.createElement("tr")
         const td = document.createElement("td")

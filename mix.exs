@@ -23,7 +23,8 @@ defmodule Webpipe.MixProject do
   defp deps do
     [
       cowboy: "~> 2.7.0",
-      jason: "> 0.0.0"
+      jason: "~> 1.2.0",
+      mime: "~> 1.3.0"
     ]
   end
 end

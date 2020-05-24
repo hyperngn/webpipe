@@ -3,25 +3,19 @@
      width="200" height="200"
      xmlns="http://www.w3.org/2000/svg">
 
-  <path d="M 20,20
+  <path d="M 40,20
           l 50, 50
           l -50, 50
           "
-          stroke-width="10px"
-          stroke="red"
+          stroke="white"
           fill="none"
           />
 
-  <path d="M 85 16
+  <path d="M 20 16
           v 108
           "
-          stroke-width="10px"
-          stroke="red" />
-
-  <path d="M 0,124
-          h 200
-          "
-          stroke="green"
+          stroke="white"
+          fill="none"
           />
 
 </svg>
