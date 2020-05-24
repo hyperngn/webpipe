@@ -2,6 +2,8 @@ defmodule Webpipe.Server do
   use GenServer
   require Logger
 
+  alias Webpipe.Router
+
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts)
   end

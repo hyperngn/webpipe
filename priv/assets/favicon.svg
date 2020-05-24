@@ -1,15 +1,17 @@
-<svg version="1.1"
+<svg class="webpipe-logo" version="1.1"
       baseProfile="full"
       height="50"
       viewBox="0 0 110 140"
       xmlns="http://www.w3.org/2000/svg">
+
+  <rect x="0" y="5" width="105" height="130" rx="15" fill="white" />
 
   <path d="M 40,20
           l 50, 50
           l -50, 50
           "
         stroke="#9b4dca"
-        stroke-width="10px"
+        stroke-width="20px"
           fill="none"
           />
 
@@ -17,7 +19,7 @@
           v 108
           "
           stroke="#9b4dca"
-          stroke-width="10px"
+          stroke-width="20px"
           fill="none"
           />
 

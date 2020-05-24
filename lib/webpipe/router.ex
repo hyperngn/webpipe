@@ -3,7 +3,7 @@ defmodule Webpipe.Router do
     :cowboy_router.compile([
       {:_,
        [
-         {:_, HTTPHandler, []}
+         {:_, Webpipe.HTTPHandler, []}
        ]}
     ])
   end

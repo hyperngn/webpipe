@@ -1,7 +1,7 @@
 defmodule Webpipe.HTTPHandler do
   import Logger, only: [info: 1]
 
-  alias Webpipe.{SessionStore, Templates}
+  alias Webpipe.{SessionStore, Templates, Assets, IDGenerator}
 
   def init(req, _opts) do
     info([req.method, " ", req.path, " PID:", inspect(self())])
@@ -10,31 +10,47 @@ defmodule Webpipe.HTTPHandler do
       {"GET", "/"} ->
         index_page(req)
 
+      {"GET", "/favicon.ico"} ->
+        static_handler("favicon.svg", req)
+
       {"GET", "/session-sse/" <> id} ->
         session_eventsource_handler(id, req)
 
       {method, "/session/" <> id} when method in ~w[GET PUT POST PATCH] ->
         session_handler(method, id, req)
 
-      {"GET", "/static/" <> asset} ->
-        static_handler(asset)
+      {"GET", "/static/" <> asset_path} ->
+        static_handler(asset_path, req)
 
       {method, path} ->
         not_found(method, path, req)
     end
   end
 
-  def static_handler(req) do
+  def static_handler(asset_path, req) do
+    {mime_type, asset_contents} = Assets.for_path(asset_path)
+
+    render_response(asset_contents, req, mime_type, %{
+      "cache-control" => "public, max-age=86400"
+    })
   end
 
-  defp render_response(resp_body, req, content_type \\ "text/html; charset=utf-8") do
+  defp render_response(
+         resp_body,
+         req,
+         content_type \\ "text/html; charset=utf-8",
+         http_headers \\ %{}
+       ) do
     resp =
       :cowboy_req.reply(
         200,
-        %{
-          "content-type" => content_type,
-          "strict-transport-security" => "max-age=63072000"
-        },
+        Map.merge(
+          %{
+            "content-type" => content_type,
+            "strict-transport-security" => "max-age=63072000"
+          },
+          http_headers
+        ),
         resp_body,
         req
       )
@@ -50,7 +66,7 @@ defmodule Webpipe.HTTPHandler do
     |> render_response(req)
   end
 
-  defp not_found(method, path, req) do
+  defp not_found(_method, path, req) do
     render_response("<!doctype html> <h1>404</h1> Resource `#{path}`.", req)
   end
 
