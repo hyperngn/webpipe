@@ -71,15 +71,11 @@ defmodule Webpipe.HTTPHandler do
   end
 
   def session_handler("GET", id, req) do
-    resp =
-      :cowboy_req.reply(
-        200,
-        %{"content-type" => "text/html; charset=utf-8"},
-        render_template(:"session.html.eex", %{session_id: id}),
-        req
-      )
-
-    {:ok, resp, []}
+    :"session.html.eex"
+    |> render_template(%{
+      session_id: id
+    })
+    |> render_response(req)
   end
 
   def session_handler(_, id, req) do

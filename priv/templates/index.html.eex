@@ -27,7 +27,6 @@
         <%= @session_url %>
       </a>
       </p>
-      <img src="/static/webpipe-screenshot.png" />
     </section>
     <hr />
     <section class="container">
