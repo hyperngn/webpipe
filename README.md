@@ -1,10 +1,36 @@
-# Webpipe
+# WebPipe
 
-1. What is webpipe?
-2. Can we do this using Plug?
-3. How about Golang?
-4. How about Elixir?
+WebPipe allows you to pipe from your servers to the browser!
 
-Pipe your log files:
+## Screenshots
 
-tail -f yourlog.log | curl --upload-file - https://6a625a69.ngrok.io/session/toronto-elixir-is-awesome-62ed73fdd2
+![Screenshot of WebPipe](./webpipe-screenshot.png)
+
+## Usage
+
+You can spin it up by running the following command if you have a working
+version of Elixir:
+
+```
+iex -S mix
+```
+
+If you don't have Elixir you can build a docker container and run it in a
+container via the following commands:
+
+```
+# build the image
+docker build -t webpipe:latest .
+# run the image
+docker run webpipe:latest
+```
+
+Once you boot up the docker container, webpipe should be available on the docker
+container's IP on port 8000.
+
+You can use the following command to find the IP address of your webpipe
+container:
+
+```
+docker inspect  -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_name>
+```
