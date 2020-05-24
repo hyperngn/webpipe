@@ -42,45 +42,33 @@ defmodule Webpipe do
     end
 
     def static_handler(req) do
+    end
+
+    defp render_response(resp_body, req, content_type \\ "text/html; charset=utf-8") do
       resp =
         :cowboy_req.reply(
           200,
-          %{"content-type" => "text/html; charset=utf-8"},
-          "",
+          %{
+            "content-type" => content_type,
+            "strict-transport-security" => "max-age=63072000"
+          },
+          resp_body,
           req
         )
 
       {:ok, resp, []}
     end
 
-    def index_page(req) do
-      resp =
-        :cowboy_req.reply(
-          200,
-          %{"content-type" => "text/html; charset=utf-8"},
-          render_template(:"index.html.eex", %{
-            session_url: "https://webpipe.hyperngn.com/session/#{IDGenerator.generate()}"
-          }),
-          req
-        )
-
-      {:ok, resp, []}
+    defp index_page(req) do
+      :"index.html.eex"
+      |> render_template(%{
+        session_url: "https://webpipe.hyperngn.com/session/#{IDGenerator.generate()}"
+      })
+      |> render_response(req)
     end
 
-    def render_template(name, assigns) when is_atom(name) do
-      apply(Templates, name, [assigns])
-    end
-
-    def not_found(_method, path, req) do
-      resp =
-        :cowboy_req.reply(
-          404,
-          %{"content-type" => "text/html; charset=utf-8"},
-          "<!doctype html> <h1>404</h1> Resource `#{path}` not found!",
-          req
-        )
-
-      {:ok, resp, []}
+    defp not_found(method, path, req) do
+      render_response("<!doctype html> <h1>404</h1> Resource `#{path}`.", req)
     end
 
     def session_handler("GET", id, req) do
@@ -107,6 +95,10 @@ defmodule Webpipe do
         )
 
       {:ok, resp, []}
+    end
+
+    defp render_template(name, assigns) when is_atom(name) do
+      apply(Templates, name, [assigns])
     end
 
     def read_body_loop(id, req) do
