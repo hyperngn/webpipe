@@ -18,6 +18,8 @@
     </header>
     <section class="fluid-container">
       <div class="controls">
+        Run <code>tail -f access.log | curl --upload-file - <%= @session_url %></code>
+        to pipe data to this page!
         <div class="float-right">
           <input type="checkbox" id="pause-logs">
           <label class="label-inline" for="pause-logs">Pause logs</label>

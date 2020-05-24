@@ -61,10 +61,12 @@ defmodule Webpipe.HTTPHandler do
   defp index_page(req) do
     :"index.html.eex"
     |> render_template(%{
-      session_url: "https://webpipe.hyperngn.com/session/#{IDGenerator.generate()}"
+      session_url: session_url(IDGenerator.generate())
     })
     |> render_response(req)
   end
+
+  defp session_url(id), do:  "https://webpipe.hyperngn.com/session/#{id}"
 
   defp not_found(_method, path, req) do
     render_response("<!doctype html> <h1>404</h1> Resource `#{path}`.", req)
@@ -73,7 +75,8 @@ defmodule Webpipe.HTTPHandler do
   def session_handler("GET", id, req) do
     :"session.html.eex"
     |> render_template(%{
-      session_id: id
+      session_id: id,
+      session_url: session_url(id)
     })
     |> render_response(req)
   end
