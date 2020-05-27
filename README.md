@@ -8,7 +8,16 @@ WebPipe allows you to pipe from your servers to the browser!
 
 ## Usage
 
-You can spin it up by running the following command if you have a working
+Easiest way to get webpipe working is by using the [pre-built docker image on
+dockerhub](https://hub.docker.com/r/hyperngn/webpipe)
+
+```
+docker run --rm --publish 8000:8000 hyperngn/webpipe
+```
+
+This spins up a new container with webpipe running on http://localhost:8000
+
+You can also spin it up by running the following command if you have a working
 version of Elixir:
 
 ```
@@ -22,15 +31,5 @@ container via the following commands:
 # build the image
 docker build -t webpipe:latest .
 # run the image
-docker run webpipe:latest
-```
-
-Once you boot up the docker container, webpipe should be available on the docker
-container's IP on port 8000.
-
-You can use the following command to find the IP address of your webpipe
-container:
-
-```
-docker inspect  -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_name>
+docker run --publish 8000:8000 webpipe:latest
 ```
